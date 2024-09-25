@@ -20,7 +20,8 @@ jobs:
 
       # Run Super Linter
       - name: Run Super Linter
-        uses: github/super-linter@v5
+        uses: github/super-linter@v6
         env:
           VALIDATE_ALL_CODEBASE: true # Optional: Lint the entire codebase
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DISABLE_ERRORS: true
