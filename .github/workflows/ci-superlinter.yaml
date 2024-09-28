@@ -17,12 +17,10 @@ jobs:
       # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      # Set and print the Relevant SHA using a different approach
-      - name: Print Relevant SHA
-        run: |
-          echo "Relevant commit SHA: ${{ github.event.pull_request.head.sha || github.sha }}"
-      
+    
       # Run Super Linter
       - name: Run Super Linter
         uses: github/super-linter@v6
