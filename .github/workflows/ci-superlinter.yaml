@@ -18,6 +18,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Print Relevant SHA
+      - name: Print Relevant SHA
+        run: echo "Relevant commit SHA: $RELEVANT_SHA"
+        env:
+          RELEVANT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+
       # Run Super Linter
       - name: Run Super Linter
         uses: github/super-linter@v6
