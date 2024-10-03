@@ -1,0 +1,44 @@
+name: Notify Slack on Action Outcome
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    
+     # Notify Slack on completion
+    - name: Notify Slack of Action Outcome
+      if: always() # Ensures this step runs even if the job fails
+      run: |
+        if [ "${{ job.status }}" == "success" ]; then
+          STATUS="Success"
+          COLOR="#36a64f"  # Green
+        else
+          STATUS="Failure"
+          COLOR="#ff0000"  # Red
+        fi
+
+        curl -X POST -H 'Content-type: application/json' --data "{
+          \"attachments\": [
+            {
+              \"fallback\": \"GitHub Action: ${{ github.workflow }} result - $STATUS\",
+              \"color\": \"$COLOR\",
+              \"pretext\": \"GitHub Action: *${{ github.workflow }}*\",
+              \"title\": \"Status: $STATUS\",
+              \"text\": \"Repository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}\nTriggered by: ${{ github.actor }}\",
+              \"footer\": \"GitHub Actions\",
+              \"ts\": $(date +%s)
+            }
+          ]
+        }" ${{ secrets.SLACK_WEBHOOK_URL }}
