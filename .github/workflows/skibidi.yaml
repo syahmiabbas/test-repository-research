@@ -1,8 +1,8 @@
-name: Notify Slack after all workflows complete
+name: Notify Slack 
 
 on:
   workflow_run:
-    workflows: # List of workflows that must complete before this notification triggers
+    workflows:
       - CI and Super Linter
       - Notify Slack on Action Outcome
     types:
@@ -12,23 +12,82 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
+      - name: Get workflow runs
+        id: get-workflows
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const workflowNames = [
+              'CI and Super Linter',
+              'Notify Slack on Action Outcome'
+            ];
+            
+            let workflowStatuses = [];
+            
+            for (const name of workflowNames) {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: name,
+                per_page: 1
+              });
+              
+              if (runs.data.workflow_runs.length > 0) {
+                const run = runs.data.workflow_runs[0];
+                workflowStatuses.push({
+                  name: name,
+                  conclusion: run.conclusion
+                });
+              }
+            }
+            
+            return workflowStatuses;
+
+      - name: Prepare Slack message
+        id: slack-message
+        run: |
+          WORKFLOW_RESULTS="${{ steps.get-workflows.outputs.result }}"
+          
+          # Initialize variables
+          ALL_PASSED=true
+          MESSAGE=""
+          
+          # Process each workflow status
+          echo "$WORKFLOW_RESULTS" | jq -c '.[]' | while read -r workflow; do
+            name=$(echo "$workflow" | jq -r '.name')
+            status=$(echo "$workflow" | jq -r '.conclusion')
+            
+            if [ "$status" == "success" ]; then
+              icon=":white_check_mark:"
+            else
+              icon=":x:"
+              ALL_PASSED=false
+            fi
+            
+            MESSAGE="$MESSAGE\n• $name: $status $icon"
+          done
+          
+          # Set overall status
+          if [ "$ALL_PASSED" == "true" ]; then
+            echo "::set-output name=color::#36a64f"
+            echo "::set-output name=status::All workflows succeeded"
+          else
+            echo "::set-output name=color::#ff0000"
+            echo "::set-output name=status::Some workflows failed"
+          fi
+          
+          echo "::set-output name=details::$MESSAGE"
+
       - name: Notify Slack
         run: |
-          if [ "${{ github.event.workflow_run.conclusion }}" == "success" ]; then
-            STATUS="All workflows succeeded"
-            COLOR="#36a64f"
-          else
-            STATUS="Some workflows failed"
-            COLOR="#ff0000"
-          fi
           curl -X POST -H 'Content-type: application/json' --data "{
             \"attachments\": [
               {
-                \"fallback\": \"GitHub Actions: $STATUS\",
-                \"color\": \"$COLOR\",
+                \"fallback\": \"GitHub Actions: ${{ steps.slack-message.outputs.status }}\",
+                \"color\": \"${{ steps.slack-message.outputs.color }}\",
                 \"pretext\": \"GitHub Actions completed\",
-                \"title\": \"Status: $STATUS\",
-                \"text\": \"All specified workflows have finished running.\",
+                \"title\": \"Status: ${{ steps.slack-message.outputs.status }}\",
+                \"text\": \"Workflow details:${{ steps.slack-message.outputs.details }}\",
                 \"footer\": \"GitHub Actions\",
                 \"ts\": $(date +%s)
               }
