@@ -1,0 +1,36 @@
+name: Notify Slack after all workflows complete
+
+on:
+  workflow_run:
+    workflows: # List of workflows that must complete before this notification triggers
+      - CI and Super Linter
+      - Notify Slack on Action Outcome
+    types:
+      - completed
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify Slack
+        run: |
+          if [ "${{ github.event.workflow_run.conclusion }}" == "success" ]; then
+            STATUS="All workflows succeeded"
+            COLOR="#36a64f"
+          else
+            STATUS="Some workflows failed"
+            COLOR="#ff0000"
+          fi
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"attachments\": [
+              {
+                \"fallback\": \"GitHub Actions: $STATUS\",
+                \"color\": \"$COLOR\",
+                \"pretext\": \"GitHub Actions completed\",
+                \"title\": \"Status: $STATUS\",
+                \"text\": \"All specified workflows have finished running.\",
+                \"footer\": \"GitHub Actions\",
+                \"ts\": $(date +%s)
+              }
+            ]
+          }" ${{ secrets.SLACK_WEBHOOK_URL }}
