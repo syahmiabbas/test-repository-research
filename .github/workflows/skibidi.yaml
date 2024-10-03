@@ -1,4 +1,4 @@
-name: Notify Slack 
+name: Notify Slack after all workflows complete
 
 on:
   workflow_run:
@@ -45,12 +45,14 @@ jobs:
 
       - name: Prepare Slack message
         id: slack-message
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
         run: |
           WORKFLOW_RESULTS="${{ steps.get-workflows.outputs.result }}"
           
           # Initialize variables
           ALL_PASSED=true
-          MESSAGE=""
+          STATUS_MESSAGE=""
           
           # Process each workflow status
           echo "$WORKFLOW_RESULTS" | jq -c '.[]' | while read -r workflow; do
@@ -58,38 +60,60 @@ jobs:
             status=$(echo "$workflow" | jq -r '.conclusion')
             
             if [ "$status" == "success" ]; then
-              icon=":white_check_mark:"
+              icon="✅"
             else
-              icon=":x:"
+              icon="❌"
               ALL_PASSED=false
             fi
             
-            MESSAGE="$MESSAGE\n• $name: $status $icon"
+            STATUS_MESSAGE="$STATUS_MESSAGE\n*$name*: $status $icon"
           done
+          
+          # Extract GitHub context information
+          REPO_NAME=$(echo $GITHUB_CONTEXT | jq -r '.repository')
+          BRANCH=$(echo $GITHUB_CONTEXT | jq -r '.ref' | sed 's/refs\/heads\///')
+          COMMIT=$(echo $GITHUB_CONTEXT | jq -r '.sha')
+          ACTOR=$(echo $GITHUB_CONTEXT | jq -r '.actor')
           
           # Set overall status
           if [ "$ALL_PASSED" == "true" ]; then
-            echo "::set-output name=color::#36a64f"
-            echo "::set-output name=status::All workflows succeeded"
+            echo "::set-output name=overall_status::Success"
           else
-            echo "::set-output name=color::#ff0000"
-            echo "::set-output name=status::Some workflows failed"
+            echo "::set-output name=overall_status::Failure"
           fi
           
-          echo "::set-output name=details::$MESSAGE"
+          echo "::set-output name=status_details::$STATUS_MESSAGE"
+          echo "::set-output name=repo::$REPO_NAME"
+          echo "::set-output name=branch::$BRANCH"
+          echo "::set-output name=commit::$COMMIT"
+          echo "::set-output name=actor::$ACTOR"
 
       - name: Notify Slack
         run: |
           curl -X POST -H 'Content-type: application/json' --data "{
-            \"attachments\": [
+            \"blocks\": [
               {
-                \"fallback\": \"GitHub Actions: ${{ steps.slack-message.outputs.status }}\",
-                \"color\": \"${{ steps.slack-message.outputs.color }}\",
-                \"pretext\": \"GitHub Actions completed\",
-                \"title\": \"Status: ${{ steps.slack-message.outputs.status }}\",
-                \"text\": \"Workflow details:${{ steps.slack-message.outputs.details }}\",
-                \"footer\": \"GitHub Actions\",
-                \"ts\": $(date +%s)
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"*GitHub Actions: Multiple Workflow Status*\"
+                }
+              },
+              {
+                \"type\": \"section\",
+                \"text\": {
+                  \"type\": \"mrkdwn\",
+                  \"text\": \"Overall Status: *${{ steps.slack-message.outputs.overall_status }}*\n${{ steps.slack-message.outputs.status_details }}\"
+                }
+              },
+              {
+                \"type\": \"context\",
+                \"elements\": [
+                  {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"Repository: ${{ steps.slack-message.outputs.repo }} | Branch: ${{ steps.slack-message.outputs.branch }} | Commit: ${{ steps.slack-message.outputs.commit }} | Triggered by: ${{ steps.slack-message.outputs.actor }}\"
+                  }
+                ]
               }
             ]
           }" ${{ secrets.SLACK_WEBHOOK_URL }}
