@@ -20,11 +20,37 @@ jobs:
         with:
           fetch-depth: 0
 
-    
       # Run Super Linter
       - name: Run Super Linter
         uses: github/super-linter@v6
         env:
-          VALIDATE_ALL_CODEBASE: true # Optional: Lint the entire codebase
+          VALIDATE_ALL_CODEBASE: true  # Optional: Lint the entire codebase
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DISABLE_ERRORS: true
+          DISABLE_ERRORS: true  # Optional: Only warnings, no errors
+
+      # Notify Slack of Action Outcome
+      - name: Notify Slack of Action Outcome
+        if: always()  # Ensures this step runs even if the job fails
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            STATUS="Success"
+            COLOR="#36a64f"  # Green
+          else
+            STATUS="Failure"
+            COLOR="#ff0000"  # Red
+          fi
+
+          # Send Slack notification
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"attachments\": [
+              {
+                \"fallback\": \"GitHub Action: ${{ github.workflow }} result - $STATUS\",
+                \"color\": \"$COLOR\",
+                \"pretext\": \"GitHub Action: *${{ github.workflow }}*\",
+                \"title\": \"Status: $STATUS\",
+                \"text\": \"Repository: ${{ github.repository }}\nBranch: ${{ github.ref_name }}\nCommit: ${{ github.sha }}\nCommit Message: ${{ github.event.head_commit.message }}\nTriggered by: ${{ github.actor }}\",
+                \"footer\": \"GitHub Actions\",
+                \"ts\": $(date +%s)
+              }
+            ]
+          }" ${{ secrets.SLACK_WEBHOOK_URL }}
