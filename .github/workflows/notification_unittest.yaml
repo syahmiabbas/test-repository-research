@@ -1,4 +1,4 @@
-name: CI
+name: notification_unittests
 
 on:
   push:
@@ -34,7 +34,7 @@ jobs:
           coverage html  # Create an HTML report
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: htmlcov/  # Path to the generated HTML coverage report
