@@ -53,6 +53,14 @@ jobs:
         with:
           name: coverage-report
           path: htmlcov/  # Path to the generated HTML coverage report
+          
+      - name: Upload Test Status
+        run: echo "status=completed" > test-status.txt
+      - name: Upload test status artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-status
+          path: test-status.txt
 
       - name: Notify on failure
         if: failure()
