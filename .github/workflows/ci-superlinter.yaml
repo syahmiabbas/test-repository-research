@@ -27,3 +27,12 @@ jobs:
           VALIDATE_ALL_CODEBASE: true  # Optional: Lint the entire codebase
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DISABLE_ERRORS: true  # Optional: Only warnings, no     
+
+      # Upload linter status as artifact
+      - name: Upload Linter Status
+        run: echo "status=completed" > linter-status.txt
+      - name: Upload linter status artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linter-status
+          path: linter-status.txt
