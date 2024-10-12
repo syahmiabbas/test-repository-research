@@ -1,0 +1,42 @@
+name: Notify on Completion
+
+on:
+  workflow_run:
+    workflows: ["CI and Super Linter", "notification_unittests"]  # Names of the workflows to listen for
+    types:
+      - completed
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Notify Slack of Action Outcome
+        run: |
+          # Check the status of the completed workflows
+          LINTER_STATUS="${{ github.event.workflow_run.conclusion }}"
+          TESTS_STATUS="${{ github.event.workflow_run.conclusion }}"
+
+          # Set the overall status
+          if [[ "$LINTER_STATUS" == "success" && "$TESTS_STATUS" == "success" ]]; then
+            STATUS="Success"
+            COLOR="#36a64f"  # Green
+          else
+            STATUS="Failure"
+            COLOR="#ff0000"  # Red
+          fi
+
+          # Send Slack notification
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"attachments\": [
+              {
+                \"fallback\": \"GitHub Action: Notify on Completion result - $STATUS\",
+                \"color\": \"$COLOR\",
+                \"pretext\": \"GitHub Action: *Notify on Completion*\",
+                \"title\": \"Status: $STATUS\",
+                \"text\": \"Linter Status: $LINTER_STATUS\nTests Status: $TESTS_STATUS\",
+                \"footer\": \"GitHub Actions\",
+                \"ts\": $(date +%s)
+              }
+            ]
+          }" ${{ secrets.SLACK_WEBHOOK_URL }}
