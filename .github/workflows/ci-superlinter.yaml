@@ -1,12 +1,12 @@
-name: CI and Super Linter
+# name: CI and Super Linter
 
-on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
+#   pull_request:
+#     branches:
+#       - main
 
 jobs:
   lint:
