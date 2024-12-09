@@ -8,4 +8,4 @@
 8.	PSR MS then sends a notification message to Notification MS via [RKEY] order.notification, which Notification MS then sends a message to the user's Telegram via a Telegram bot. 
 9.	PSR returns resource link(s) back to Marketplace UI which it then routes users to /marketplace/resource-links for students to see the resources they have purchased
 10. User submits invoice
-11. User acknowledges
+11. User acknowledges, done
