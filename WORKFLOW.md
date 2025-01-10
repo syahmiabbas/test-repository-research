@@ -7,5 +7,5 @@
 7.	StudyResource MS looks for 1-1 match of sent resourceID(s) to url of resources stored on AWS S3 Bucket (resourceS3URL) and returns the URL(s)
 8.	PSR MS then sends a notification message to Notification MS via [RKEY] order.notification, which Notification MS then sends a message to the user's Telegram via a Telegram bot. 
 9.	PSR returns resource link(s) back to Marketplace UI which it then routes users to /marketplace/resource-links for students to see the resources they have purchased
-10. User submits invoice
+10. User submits invoicee
 11. User acknowledgess
