@@ -101,3 +101,11 @@ It seems like you might be looking for clarification or further assistance. If y
 ---
 ### GPT
 It appears that you might be expressing confusion or seeking clarification, but I'm not sure what specific information or assistance you need. If you could provide more context or specify your question, I'd be happy to help you further!
+
+---
+### User
+> ?
+
+---
+### GPT
+It seems like there might be some miscommunication or misunderstanding. If you're looking for specific feedback, clarification, or assistance on a topic, please provide more details or ask a specific question. I'm here to help with any coding or debugging inquiries you may have!
