@@ -109,3 +109,11 @@ It appears that you might be expressing confusion or seeking clarification, but 
 ---
 ### GPT
 It seems like there might be some miscommunication or misunderstanding. If you're looking for specific feedback, clarification, or assistance on a topic, please provide more details or ask a specific question. I'm here to help with any coding or debugging inquiries you may have!
+
+---
+### User
+> ?
+
+---
+### GPT
+It seems like there may be some confusion or a communication issue. If you're trying to ask something specific or if there's a particular topic you'd like to discuss, please let me know! You can ask about code, debugging, or any other topic, and I'll do my best to assist you.
