@@ -1,0 +1,59 @@
+{html}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Store Registration</title>
+</head>
+<body>
+    <h1>Welcome to the Pet Store</h1>
+    <button id="registerBtn">Register</button>
+
+    <div id="registrationForm" style="display:none;">
+        <h2>Registration Form</h2>
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="email" id="email" placeholder="Email" required>
+        <button id="submitBtn">Submit</button>
+    </div>
+
+    <div id="successMessage" style="display:none;">
+        <h2>Registration Successful! Please check your email to confirm.</h2>
+    </div>
+
+    <div id="errorMessage" style="display:none; color: red;"></div>
+
+    <script>
+        document.getElementById('registerBtn').onclick = function() {
+            document.getElementById('registrationForm').style.display = 'block';
+        };
+
+        document.getElementById('submitBtn').onclick = function() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+
+            fetch('/api/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('registrationForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                } else {
+                    document.getElementById('errorMessage').innerText = data.message;
+                    document.getElementById('errorMessage').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                document.getElementById('errorMessage').innerText = 'An error occurred. Please try again.';
+                document.getElementById('errorMessage').style.display = 'block';
+            });
+        };
+    </script>
+</body>
+</html>
